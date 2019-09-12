@@ -1,0 +1,10 @@
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\bin\Debug\Multichat-client.exe.config
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\bin\Debug\Multichat-client.exe
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\bin\Debug\Multichat-client.pdb
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csprojAssemblyReference.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat_client.Form1.resources
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat_client.Properties.Resources.resources
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csproj.GenerateResource.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csproj.CoreCompileInputs.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.exe
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.pdb
