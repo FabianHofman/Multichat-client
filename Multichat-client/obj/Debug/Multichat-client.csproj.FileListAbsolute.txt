@@ -8,3 +8,13 @@ D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\
 D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csproj.CoreCompileInputs.cache
 D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.exe
 D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat-client\Multichat-client\obj\Debug\Multichat-client.pdb
+D:\School\NotS\Multichat-client\Multichat-client\bin\Debug\Multichat-client.exe.config
+D:\School\NotS\Multichat-client\Multichat-client\bin\Debug\Multichat-client.exe
+D:\School\NotS\Multichat-client\Multichat-client\bin\Debug\Multichat-client.pdb
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csprojAssemblyReference.cache
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat_client.Properties.Resources.resources
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csproj.GenerateResource.cache
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat-client.csproj.CoreCompileInputs.cache
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat-client.exe
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat-client.pdb
+D:\School\NotS\Multichat-client\Multichat-client\obj\Debug\Multichat_client.Client.resources

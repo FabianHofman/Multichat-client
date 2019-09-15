@@ -1,0 +1,10 @@
+D:\School\NotS\Multichat-client\Mutliclient-server\bin\Debug\Mutliclient-server.exe.config
+D:\School\NotS\Multichat-client\Mutliclient-server\bin\Debug\Mutliclient-server.exe
+D:\School\NotS\Multichat-client\Mutliclient-server\bin\Debug\Mutliclient-server.pdb
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient-server.csprojAssemblyReference.cache
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient_server.Properties.Resources.resources
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient-server.csproj.GenerateResource.cache
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient-server.csproj.CoreCompileInputs.cache
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient-server.exe
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient-server.pdb
+D:\School\NotS\Multichat-client\Mutliclient-server\obj\Debug\Mutliclient_server.Server.resources

@@ -1,6 +1,6 @@
 ﻿namespace Multichat_client
 {
-    partial class Form1
+    partial class Client
     {
         /// <summary>
         /// Required designer variable.
@@ -29,10 +29,13 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtBufferSize = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.txtChatServerPort = new System.Windows.Forms.TextBox();
             this.txtChatServerIP = new System.Windows.Forms.TextBox();
             this.btnConnectWithServer = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.btnListen = new System.Windows.Forms.Button();
             this.btnSendMessage = new System.Windows.Forms.Button();
             this.txtMessageToBeSend = new System.Windows.Forms.TextBox();
             this.listChats = new System.Windows.Forms.ListBox();
@@ -42,22 +45,61 @@
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.txtBufferSize);
+            this.groupBox1.Controls.Add(this.label3);
+            this.groupBox1.Controls.Add(this.label2);
+            this.groupBox1.Controls.Add(this.txtChatServerPort);
             this.groupBox1.Controls.Add(this.txtChatServerIP);
             this.groupBox1.Controls.Add(this.btnConnectWithServer);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox1.Location = new System.Drawing.Point(635, 59);
+            this.groupBox1.Location = new System.Drawing.Point(636, 11);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(184, 163);
+            this.groupBox1.Size = new System.Drawing.Size(184, 291);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connect to Server";
             // 
+            // txtBufferSize
+            // 
+            this.txtBufferSize.Location = new System.Drawing.Point(29, 200);
+            this.txtBufferSize.Name = "txtBufferSize";
+            this.txtBufferSize.Size = new System.Drawing.Size(139, 23);
+            this.txtBufferSize.TabIndex = 6;
+            this.txtBufferSize.Text = "1024";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(29, 177);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(77, 17);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "Buffer Size";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(26, 102);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(113, 17);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Chat Server Port";
+            // 
+            // txtChatServerPort
+            // 
+            this.txtChatServerPort.Location = new System.Drawing.Point(29, 127);
+            this.txtChatServerPort.Name = "txtChatServerPort";
+            this.txtChatServerPort.Size = new System.Drawing.Size(139, 23);
+            this.txtChatServerPort.TabIndex = 3;
+            this.txtChatServerPort.Text = "9000";
+            // 
             // txtChatServerIP
             // 
-            this.txtChatServerIP.Location = new System.Drawing.Point(29, 66);
+            this.txtChatServerIP.Location = new System.Drawing.Point(29, 60);
             this.txtChatServerIP.Margin = new System.Windows.Forms.Padding(2);
             this.txtChatServerIP.Name = "txtChatServerIP";
             this.txtChatServerIP.Size = new System.Drawing.Size(141, 23);
@@ -66,7 +108,7 @@
             // 
             // btnConnectWithServer
             // 
-            this.btnConnectWithServer.Location = new System.Drawing.Point(29, 116);
+            this.btnConnectWithServer.Location = new System.Drawing.Point(29, 249);
             this.btnConnectWithServer.Margin = new System.Windows.Forms.Padding(2);
             this.btnConnectWithServer.Name = "btnConnectWithServer";
             this.btnConnectWithServer.Size = new System.Drawing.Size(139, 27);
@@ -84,19 +126,6 @@
             this.label1.Size = new System.Drawing.Size(99, 17);
             this.label1.TabIndex = 0;
             this.label1.Text = "Chat Server IP";
-            // 
-            // btnListen
-            // 
-            this.btnListen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnListen.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnListen.Location = new System.Drawing.Point(636, 16);
-            this.btnListen.Margin = new System.Windows.Forms.Padding(2);
-            this.btnListen.Name = "btnListen";
-            this.btnListen.Size = new System.Drawing.Size(184, 29);
-            this.btnListen.TabIndex = 6;
-            this.btnListen.Text = "Listen";
-            this.btnListen.UseVisualStyleBackColor = true;
-            this.btnListen.Click += new System.EventHandler(this.BtnListen_Click);
             // 
             // btnSendMessage
             // 
@@ -136,7 +165,7 @@
             this.listChats.Size = new System.Drawing.Size(610, 420);
             this.listChats.TabIndex = 7;
             // 
-            // Form1
+            // Client
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -144,13 +173,12 @@
             this.AutoScrollMinSize = new System.Drawing.Size(816, 489);
             this.ClientSize = new System.Drawing.Size(831, 490);
             this.Controls.Add(this.groupBox1);
-            this.Controls.Add(this.btnListen);
             this.Controls.Add(this.btnSendMessage);
             this.Controls.Add(this.txtMessageToBeSend);
             this.Controls.Add(this.listChats);
             this.MinimumSize = new System.Drawing.Size(847, 529);
-            this.Name = "Form1";
-            this.Text = "Form1";
+            this.Name = "Client";
+            this.Text = "Client";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -164,10 +192,13 @@
         private System.Windows.Forms.TextBox txtChatServerIP;
         private System.Windows.Forms.Button btnConnectWithServer;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnListen;
         private System.Windows.Forms.Button btnSendMessage;
         private System.Windows.Forms.TextBox txtMessageToBeSend;
         private System.Windows.Forms.ListBox listChats;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox txtChatServerPort;
+        private System.Windows.Forms.TextBox txtBufferSize;
+        private System.Windows.Forms.Label label3;
     }
 }
 
