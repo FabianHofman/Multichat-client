@@ -39,12 +39,14 @@
             this.btnSendMessage = new System.Windows.Forms.Button();
             this.txtMessageToBeSend = new System.Windows.Forms.TextBox();
             this.listChats = new System.Windows.Forms.ListBox();
+            this.btnDisconnectFromServer = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.btnDisconnectFromServer);
             this.groupBox1.Controls.Add(this.txtBufferSize);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.label2);
@@ -57,7 +59,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(184, 291);
+            this.groupBox1.Size = new System.Drawing.Size(184, 330);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connect to Server";
@@ -150,6 +152,7 @@
             this.txtMessageToBeSend.Name = "txtMessageToBeSend";
             this.txtMessageToBeSend.Size = new System.Drawing.Size(530, 23);
             this.txtMessageToBeSend.TabIndex = 8;
+            this.txtMessageToBeSend.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtMessageToBeSend_KeyPress);
             // 
             // listChats
             // 
@@ -164,6 +167,17 @@
             this.listChats.Name = "listChats";
             this.listChats.Size = new System.Drawing.Size(610, 420);
             this.listChats.TabIndex = 7;
+            // 
+            // btnDisconnectFromServer
+            // 
+            this.btnDisconnectFromServer.Location = new System.Drawing.Point(29, 290);
+            this.btnDisconnectFromServer.Margin = new System.Windows.Forms.Padding(2);
+            this.btnDisconnectFromServer.Name = "btnDisconnectFromServer";
+            this.btnDisconnectFromServer.Size = new System.Drawing.Size(139, 27);
+            this.btnDisconnectFromServer.TabIndex = 7;
+            this.btnDisconnectFromServer.Text = "Disconnect";
+            this.btnDisconnectFromServer.UseVisualStyleBackColor = true;
+            this.btnDisconnectFromServer.Click += new System.EventHandler(this.BtnDisconnectFromServer_Click);
             // 
             // Client
             // 
@@ -199,6 +213,7 @@
         private System.Windows.Forms.TextBox txtChatServerPort;
         private System.Windows.Forms.TextBox txtBufferSize;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnDisconnectFromServer;
     }
 }
 

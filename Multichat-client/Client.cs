@@ -18,7 +18,6 @@ namespace Multichat_client
     {
         TcpClient tcpClient;
         NetworkStream networkStream;
-        Thread thread;
 
         protected delegate void UpdateDisplayDelegate(string message);
 
@@ -26,6 +25,7 @@ namespace Multichat_client
         {
             InitializeComponent();
             btnSendMessage.Enabled = false;
+            btnDisconnectFromServer.Enabled = false;
         }
 
         private void AddMessage(string message)
@@ -45,7 +45,130 @@ namespace Multichat_client
             listChats.Items.Add(message);
         }
 
-        private async void ReceiveData(int bufferSize)
+        private async Task UpdateUI(bool SendMessage, bool ConnectWithServer, bool DisconnectFromServer)
+        {
+            btnSendMessage.Enabled = SendMessage;
+            btnConnectWithServer.Enabled = ConnectWithServer;
+            btnConnectWithServer.Enabled = DisconnectFromServer;
+        }
+
+        private async void BtnDisconnectFromServer_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await DisconnectFromServerAsync();
+            }
+            catch
+            {
+                await Task.Run(() => UpdateUI(true, false, true));
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task DisconnectFromServerAsync()
+        {
+            await SendMessageAsync("disconnect");
+            await Task.Run(() => UpdateUI(false, true, false));
+        }
+
+        private async void BtnConnectWithServer_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await CreateConnectionAsync();
+            }
+            catch (IOException ex)
+            {
+                await Task.Run(() => UpdateUI(false, true, false));
+                MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (SocketException ex)
+            {
+                await Task.Run(() => UpdateUI(false, true, false));
+                AddMessage("No connection possible, try again later!");
+                MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch
+            {
+                await Task.Run(() => UpdateUI(false, true, false));
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void BtnSendMessage_Click(object sender, EventArgs e)
+        {
+            if (txtMessageToBeSend.Text == "" || networkStream == null)
+            {
+                return;
+            }
+
+            try
+            {
+                await HandleMessageTransactionAsync(txtMessageToBeSend.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async void TxtMessageToBeSend_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (txtMessageToBeSend.Text == "" || networkStream == null || !(e.KeyChar == (char)13))
+            {
+                return;
+            }
+
+            try
+            {
+                await HandleMessageTransactionAsync(txtMessageToBeSend.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
+        private async Task HandleMessageTransactionAsync(string message)
+        {
+            await SendMessageAsync(message);
+            AddMessage(message);
+            txtMessageToBeSend.Clear();
+            txtMessageToBeSend.Focus();
+        }
+
+        private async Task SendMessageAsync(string message)
+        {
+            byte[] buffer = Encoding.ASCII.GetBytes(message);
+            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        private async Task CreateConnectionAsync()
+        {
+            int portNumber = StringToInt(txtChatServerPort.Text);
+            int bufferSize = StringToInt(txtBufferSize.Text);
+            string IPaddress = txtChatServerIP.Text;
+
+            if (!ValidateClientPreferences(IPaddress, portNumber, bufferSize))
+            {
+                return;
+            }
+
+            AddMessage("Connecting...");
+
+            tcpClient = await Task.Run(() => CreateNewTcpClient(IPaddress, portNumber));
+            await Task.Run(() => UpdateUI(true, false, true));
+            await Task.Run(() => ReceiveData(bufferSize));
+
+        }
+
+        private async Task<TcpClient> CreateNewTcpClient(string IPaddress, int portNumber)
+        {
+            return new TcpClient(IPaddress, portNumber);
+        }
+
+        private async Task ReceiveData(int bufferSize)
         {
             string message = "";
             byte[] buffer = new byte[bufferSize];
@@ -59,23 +182,15 @@ namespace Multichat_client
 
                 do
                 {
-                    try
-                    {
-                        int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                        message = Encoding.ASCII.GetString(buffer, 0, readBytes);
-                        completeMessage.Append(message);
-                    }
-                    catch (IOException ex)
-                    {
-                        MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        message = "bye";
-                        break;
-                    }
+                    int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+                    message = Encoding.ASCII.GetString(buffer, 0, readBytes);
+                    completeMessage.Append(message);
                 }
                 while (networkStream.DataAvailable);
 
-                if (message == "bye")
+                if (completeMessage.ToString() == "disconnect")
                 {
+                    await Task.Run(() => DisconnectFromServerAsync());
                     break;
                 }
 
@@ -88,57 +203,6 @@ namespace Multichat_client
             AddMessage("Connection closed");
         }
 
-        private async void BtnConnectWithServer_Click(object sender, EventArgs e)
-        {
-            int portNumber = StringToInt(txtChatServerPort.Text);
-            int bufferSize = StringToInt(txtBufferSize.Text);
-
-            if (!ValidateIPv4(txtChatServerIP.Text))
-            {
-                MessageBox.Show("An invalid IP address has been given! Try another IP address", "Invalid IP address", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!(portNumber >= 1024 && portNumber <= 65535))
-            {
-                MessageBox.Show("Port had an invalid value or is not within the range of 1024 - 65535", "Invalid Port number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (bufferSize < 1)
-            {
-                MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            AddMessage("Connecting...");
-            try
-            {
-                tcpClient = new TcpClient(txtChatServerIP.Text, portNumber);
-                await Task.Run(() => ReceiveData(bufferSize));
-                btnConnectWithServer.Enabled = false;
-            }
-            catch (SocketException ex)
-            {
-                AddMessage("No connection possible, try again later!");
-                MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-            btnSendMessage.Enabled = true;
-        }
-
-        private void BtnSendMessage_Click(object sender, EventArgs e)
-        {
-            string message = txtMessageToBeSend.Text;
-
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-            networkStream.Write(buffer, 0, buffer.Length);
-
-            AddMessage(message);
-            txtMessageToBeSend.Clear();
-            txtMessageToBeSend.Focus();
-        }
-
         private int StringToInt(string text)
         {
             int number;
@@ -147,7 +211,7 @@ namespace Multichat_client
             return number;
         }
 
-        public bool ValidateIPv4(string ipString)
+        private bool ValidateIPv4(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString))
             {
@@ -164,5 +228,29 @@ namespace Multichat_client
 
             return splitValues.All(r => byte.TryParse(r, out tempForParsing));
         }
+
+        private bool ValidateClientPreferences(string IPaddress, int portNumber, int bufferSize)
+        {
+            if (!ValidateIPv4(IPaddress))
+            {
+                MessageBox.Show("An invalid IP address has been given! Try another IP address", "Invalid IP address", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (!(portNumber >= 1024 && portNumber <= 65535))
+            {
+                MessageBox.Show("Port had an invalid value or is not within the range of 1024 - 65535", "Invalid Port number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (bufferSize < 1)
+            {
+                MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
+        }
+
+        
     }
 }

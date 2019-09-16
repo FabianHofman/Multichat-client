@@ -44,16 +44,16 @@ namespace Mutliclient_server
         }
 
 
-        private void BtnSend_Click(object sender, EventArgs e)
+        private async void BtnSend_Click(object sender, EventArgs e)
         {
-            string message = txtMessage.Text;
-
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-            networkStream.Write(buffer, 0, buffer.Length);
-
-            AddMessage(message);
-            txtMessage.Clear();
-            txtMessage.Focus();
+            try
+            {
+                await HandleMessageTransactionAsync(txtMessage.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private async void BtnStartStop_Click(object sender, EventArgs e)
@@ -69,25 +69,59 @@ namespace Mutliclient_server
             
         }
 
-        private void TxtMessage_KeyPress(object sender, KeyPressEventArgs e)
+        private async void TxtMessage_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (e.KeyChar == (char)13)
+            if (txtMessage.Text == "" || networkStream == null || !(e.KeyChar == (char)13))
             {
-                string message = txtMessage.Text;
-
-                if (message == "" || networkStream == null)
-                {
-                    return;
-                }
-
-
-                byte[] buffer = Encoding.ASCII.GetBytes(message);
-                networkStream.Write(buffer, 0, buffer.Length);
-
-                AddMessage(message);
-                txtMessage.Clear();
-                txtMessage.Focus();
+                return;
             }
+
+            try
+            {
+                await HandleMessageTransactionAsync(txtMessage.Text);
+            }
+            catch
+            {
+                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private async Task HandleMessageTransactionAsync(string message)
+        {
+            await SendMessageAsync(message);
+            AddMessage(message);
+            txtMessage.Clear();
+            txtMessage.Focus();
+        }
+
+        private async Task SendMessageAsync(string message)
+        {
+            byte[] buffer = Encoding.ASCII.GetBytes(message);
+            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+        }
+
+        private async Task CreateServerAsync()
+        {
+            string IPaddress = txtServerIP.Text;
+            int portNumber = StringToInt(txtPort.Text);
+            int bufferSize = StringToInt(txtBufferSize.Text);
+
+            if (!ValidateClientPreferences(IPaddress, portNumber, bufferSize))
+            {
+                return;
+            }
+
+            TcpListener tcpListener = new TcpListener(IPAddress.Parse(IPaddress), portNumber);
+            tcpListener.Start();
+
+            AddMessage($"[Server] Server started! Accepting users on port {portNumber}");
+
+            btnStartStop.Enabled = false;
+
+            tcpClient = await tcpListener.AcceptTcpClientAsync();
+
+            btnSend.Enabled = true;
+            await Task.Run(() => ReceiveData(bufferSize));
         }
 
         private async void ReceiveData(int bufferSize)
@@ -113,14 +147,14 @@ namespace Mutliclient_server
                     catch (IOException ex)
                     {
                         MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        message = "bye";
                         break;
                     }
                 }
                 while (networkStream.DataAvailable);
 
-                if (message == "bye")
+                if(completeMessage.ToString() == "disconnect")
                 {
+                    await Task.Run(() => SendMessageAsync(message));
                     break;
                 }
 
@@ -131,42 +165,6 @@ namespace Mutliclient_server
             tcpClient.Close();
 
             AddMessage("Connection closed!");
-        }
-
-        private async Task CreateServerAsync()
-        {
-            int portNumber = StringToInt(txtPort.Text);
-            int bufferSize = StringToInt(txtBufferSize.Text);
-
-            if (!ValidateIPv4(txtServerIP.Text))
-            {
-                MessageBox.Show("An invalid IP address has been given! Try another IP address", "Invalid IP address", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (!(portNumber >= 1024 && portNumber <= 65535))
-            {
-                MessageBox.Show("Port had an invalid value or is not within the range of 1024 - 65535", "Invalid Port number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            if (bufferSize < 1)
-            {
-                MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            TcpListener tcpListener = new TcpListener(IPAddress.Parse(txtServerIP.Text), portNumber);
-            tcpListener.Start();
-
-            AddMessage($"[Server] Server started! Accepting users on port {portNumber}");
-
-            btnStartStop.Enabled = false;
-
-            tcpClient = await tcpListener.AcceptTcpClientAsync();
-
-            btnSend.Enabled = true;
-            await Task.Run(() => ReceiveData(bufferSize));
         }
 
         private int StringToInt(string text)
@@ -193,6 +191,28 @@ namespace Mutliclient_server
             byte tempForParsing;
 
             return splitValues.All(r => byte.TryParse(r, out tempForParsing));
+        }
+
+        private bool ValidateClientPreferences(string IPaddress, int portNumber, int bufferSize)
+        {
+            if (!ValidateIPv4(IPaddress))
+            {
+                MessageBox.Show("An invalid IP address has been given! Try another IP address", "Invalid IP address", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (!(portNumber >= 1024 && portNumber <= 65535))
+            {
+                MessageBox.Show("Port had an invalid value or is not within the range of 1024 - 65535", "Invalid Port number", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (bufferSize < 1)
+            {
+                MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            return true;
         }
     }
 }
