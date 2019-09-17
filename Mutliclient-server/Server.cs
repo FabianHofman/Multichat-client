@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -48,7 +49,7 @@ namespace Mutliclient_server
         {
             try
             {
-                await HandleMessageTransactionAsync(txtMessage.Text);
+                await SendMessageAsync("MESSAGE", "username", txtMessage.Text);
             }
             catch
             {
@@ -78,7 +79,7 @@ namespace Mutliclient_server
 
             try
             {
-                await HandleMessageTransactionAsync(txtMessage.Text);
+                await SendMessageAsync("MESSAGE", "username", txtMessage.Text);
             }
             catch
             {
@@ -86,18 +87,16 @@ namespace Mutliclient_server
             }
         }
 
-        private async Task HandleMessageTransactionAsync(string message)
+        private async Task SendMessageAsync(string type, string username, string message)
         {
-            await SendMessageAsync(message);
+            string completeMessage = EncodeMessage(type, username, message);
+
+            byte[] buffer = Encoding.ASCII.GetBytes(completeMessage);
+            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+
             AddMessage(message);
             txtMessage.Clear();
             txtMessage.Focus();
-        }
-
-        private async Task SendMessageAsync(string message)
-        {
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-            await networkStream.WriteAsync(buffer, 0, buffer.Length);
         }
 
         private async Task CreateServerAsync()
@@ -126,11 +125,10 @@ namespace Mutliclient_server
 
         private async void ReceiveData(int bufferSize)
         {
-            string message = "";
             byte[] buffer = new byte[bufferSize];
 
             networkStream = tcpClient.GetStream();
-            AddMessage($"[Server] Client has connected!"); //TODO: Change client for username (verzin eigen protocol)
+            AddMessage($"[Server] A client has connected!"); //TODO: Change client for username (verzin eigen protocol)
 
             while (networkStream.CanRead)
             {
@@ -141,7 +139,7 @@ namespace Mutliclient_server
                     try
                     {
                         int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                        message = Encoding.ASCII.GetString(buffer, 0, readBytes);
+                        string message = Encoding.ASCII.GetString(buffer, 0, readBytes);
                         completeMessage.Append(message);
                     }
                     catch (IOException ex)
@@ -152,11 +150,16 @@ namespace Mutliclient_server
                 }
                 while (networkStream.DataAvailable);
 
-                if(completeMessage.ToString() == "disconnect")
+                string decodedType = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\@)(.*?)(?=\|)"));
+                string decodedUsername = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|{2})(.*?)(?=\|{2})"));
+                string decodedMessage = DecodeMessage(FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|{2})(.*?)(?=\@)"))); //andere regex verzinnen
+
+                if (decodedType == "INFO" && decodedMessage == "disconnect")
                 {
-                    await Task.Run(() => SendMessageAsync(message));
                     break;
                 }
+
+                AddMessage($"{decodedUsername}: {decodedMessage}");
 
                 AddMessage(completeMessage.ToString());
             }
@@ -164,7 +167,34 @@ namespace Mutliclient_server
             networkStream.Close();
             tcpClient.Close();
 
-            AddMessage("Connection closed!");
+            AddMessage($"[Server] Connection with a client has closed!");
+        }
+
+        private string EncodeMessage(string type, string username, string message)
+        {
+            type = Regex.Replace(type, "[|]", "&#124");
+            type = Regex.Replace(type, "[@]", "&#64");
+
+            username = Regex.Replace(username, "[|]", "&#124");
+            username = Regex.Replace(username, "[@]", "&#64");
+
+            message = Regex.Replace(message, "[|]", "&#124");
+            message = Regex.Replace(message, "[@]", "&#64");
+
+            return $"@{type}||{username}||{message}@";
+        }
+
+        private string FilterProtocol(string message, Regex regex)
+        {
+            return regex.Match(message).ToString();
+        }
+
+        private string DecodeMessage(string str)
+        {
+            str = Regex.Replace(str, "[&#124]", "|");
+            str = Regex.Replace(str, "[&#64]", "@");
+
+            return str;
         }
 
         private int StringToInt(string text)
