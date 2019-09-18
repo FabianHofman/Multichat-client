@@ -26,6 +26,21 @@ namespace Mutliclient_server
         {
             InitializeComponent();
         }
+
+        // Everything related to user interface
+        private async void BtnStartStop_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                await CreateServerAsync();
+            }
+            catch (SocketException ex)
+            {
+                MessageBox.Show(ex.Message, "Port already in use", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+        }
+
         private void AddMessage(string message)
         {
             if (listMessages.InvokeRequired)
@@ -43,30 +58,7 @@ namespace Mutliclient_server
             listMessages.Items.Add(message);
         }
 
-        private async void BtnStartStop_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                await CreateServerAsync();
-            }
-            catch (SocketException ex)
-            {
-                MessageBox.Show(ex.Message, "Port already in use", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-
-        }
-
-        private async Task SendMessageAsync(NetworkStream stream, string type, string username, string message)
-        {
-            string completeMessage = EncodeMessage(type, username, message);
-
-            await SendMessageOnNetworkAsync(stream, completeMessage);
-
-            message = DecodeMessage(message);
-
-            AddMessage($"{username}: {message}");
-        }
-
+        // Everything related to messages
         private async Task BroadcastMessage(TcpClient client, string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
@@ -93,7 +85,7 @@ namespace Mutliclient_server
             await stream.WriteAsync(buffer, 0, buffer.Length);
         }
 
-
+        // Eveything related to the buttons
         private async Task CreateServerAsync()
         {
             string IPaddress = txtServerIP.Text;
@@ -121,6 +113,7 @@ namespace Mutliclient_server
             
         }
 
+        // Everything related to recieving data.
         private async void ReceiveData(TcpClient client, int bufferSize)
         {
             byte[] buffer = new byte[bufferSize];
@@ -144,7 +137,7 @@ namespace Mutliclient_server
                     {
                         MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         completeMessage.Clear();
-                        completeMessage.Append("@INFO||unknown||DISCONNECT");
+                        completeMessage.Append("@INFO||unknown||DISCONNECT@");
                         break;
                     }
                 }
@@ -167,8 +160,6 @@ namespace Mutliclient_server
 
                 await BroadcastMessage(client, decodedType, decodedUsername, decodedMessage);
                 AddMessage($"{decodedUsername}: {decodedMessage}");
-
-                AddMessage(completeMessage.ToString());
             }
 
             stream.Close();
@@ -179,6 +170,7 @@ namespace Mutliclient_server
             AddMessage($"[Server] Connection with a client has closed!");
         }
 
+        // Everything related to encoding/decoding and the protocol
         private string EncodeMessage(string type, string username, string message)
         {
             type = Regex.Replace(type, "[|]", "&#124");
@@ -206,14 +198,7 @@ namespace Mutliclient_server
             return str;
         }
 
-        private int StringToInt(string text)
-        {
-            int number;
-            int.TryParse(text, out number);
-
-            return number;
-        }
-
+        // Everything related to validation of input
         public bool ValidateIPv4(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString))
@@ -252,6 +237,15 @@ namespace Mutliclient_server
                 return false;
             }
             return true;
+        }
+
+        // Everything needed to make other things work
+        private int StringToInt(string text)
+        {
+            int number;
+            int.TryParse(text, out number);
+
+            return number;
         }
     }
 }

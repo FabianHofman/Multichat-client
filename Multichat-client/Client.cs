@@ -30,23 +30,7 @@ namespace Multichat_client
             txtMessageToBeSend.Enabled = false;
         }
 
-        private void AddMessage(string message)
-        {
-            if (listChats.InvokeRequired)
-            {
-                listChats.Invoke(new UpdateDisplayDelegate(UpdateDisplay), new object[] { message });
-            }
-            else
-            {
-                UpdateDisplay(message);
-            }
-        }
-
-        private void UpdateDisplay(string message)
-        {
-            listChats.Items.Add(message);
-        }
-
+        // Everything related to user interface
         private async void BtnDisconnectFromServer_Click(object sender, EventArgs e)
         {
             try
@@ -110,6 +94,24 @@ namespace Multichat_client
 
         }
 
+        private void AddMessage(string message)
+        {
+            if (listChats.InvokeRequired)
+            {
+                listChats.Invoke(new UpdateDisplayDelegate(UpdateDisplay), new object[] { message });
+            }
+            else
+            {
+                UpdateDisplay(message);
+            }
+        }
+
+        private void UpdateDisplay(string message)
+        {
+            listChats.Items.Add(message);
+        }
+
+        // Everything related to messages
         private async Task SendMessageAsync(string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
@@ -126,7 +128,6 @@ namespace Multichat_client
         private async Task SendDisconnectMessageAsync(string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
-
             await SendMessageOnNetwork(completeMessage);
         }
 
@@ -136,34 +137,7 @@ namespace Multichat_client
             await networkStream.WriteAsync(buffer, 0, buffer.Length);
         }
 
-
-        private string EncodeMessage(string type, string username, string message)
-        {
-            type = Regex.Replace(type, "[|]", "&#124");
-            type = Regex.Replace(type, "[@]", "&#64");
-
-            username = Regex.Replace(username, "[|]", "&#124");
-            username = Regex.Replace(username, "[@]", "&#64");
-
-            message = Regex.Replace(message, "[|]", "&#124");
-            message = Regex.Replace(message, "[@]", "&#64");
-
-            return $"@{type}||{username}||{message}@";
-        }
-
-        private string FilterProtocol(string message, Regex regex)
-        {
-            return regex.Match(message).ToString();
-        }
-
-        private string DecodeMessage(string str)
-        {
-            str = Regex.Replace(str, "&#124", "|");
-            str = Regex.Replace(str, "&#64", "@");
-
-            return str;
-        }
-
+        // Everything related to buttons
         private async Task DisconnectFromServerAsync(string username)
         {
             await SendDisconnectMessageAsync("INFO", username, "DISCONNECTING");
@@ -218,6 +192,7 @@ namespace Multichat_client
 
         }
 
+        // Everything related to receiving data.
         private async Task ReceiveData(int bufferSize)
         {
             string message = "";
@@ -264,6 +239,36 @@ namespace Multichat_client
             AddMessage("Connection closed");
         }
 
+
+        // Everything related to encoding/decoding and the protocol
+        private string EncodeMessage(string type, string username, string message)
+        {
+            type = Regex.Replace(type, "[|]", "&#124");
+            type = Regex.Replace(type, "[@]", "&#64");
+
+            username = Regex.Replace(username, "[|]", "&#124");
+            username = Regex.Replace(username, "[@]", "&#64");
+
+            message = Regex.Replace(message, "[|]", "&#124");
+            message = Regex.Replace(message, "[@]", "&#64");
+
+            return $"@{type}||{username}||{message}@";
+        }
+
+        private string FilterProtocol(string message, Regex regex)
+        {
+            return regex.Match(message).ToString();
+        }
+
+        private string DecodeMessage(string str)
+        {
+            str = Regex.Replace(str, "&#124", "|");
+            str = Regex.Replace(str, "&#64", "@");
+
+            return str;
+        }
+
+        // Everything related to validation of input
         private bool ValidateIPv4(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString))
@@ -311,6 +316,7 @@ namespace Multichat_client
             return true;
         }
 
+        // Everything needed to make other things work
         private int StringToInt(string text)
         {
             int number;
