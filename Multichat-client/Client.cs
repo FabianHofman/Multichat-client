@@ -27,6 +27,7 @@ namespace Multichat_client
             InitializeComponent();
             btnSendMessage.Enabled = false;
             btnDisconnectFromServer.Enabled = false;
+            txtMessageToBeSend.Enabled = false;
         }
 
         private void AddMessage(string message)
@@ -50,7 +51,7 @@ namespace Multichat_client
         {
             try
             {
-                await DisconnectFromServerAsync();
+                await DisconnectFromServerAsync(txtUsername.Text);
             }
             catch
             {
@@ -68,10 +69,6 @@ namespace Multichat_client
             {
                 MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            catch (SocketException ex)
-            {
-                AddMessage("No connection possible, try again later!");
-            }
             catch
             {
                 MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -87,7 +84,7 @@ namespace Multichat_client
 
             try
             {
-                await SendMessageAsync("MESSAGE", "username", txtMessageToBeSend.Text);
+                await SendMessageAsync("MESSAGE", txtUsername.Text, txtMessageToBeSend.Text);
             }
             catch
             {
@@ -104,7 +101,7 @@ namespace Multichat_client
 
             try
             {
-                await SendMessageAsync("MESSAGE", "username", txtMessageToBeSend.Text);
+                await SendMessageAsync("MESSAGE", txtUsername.Text, txtMessageToBeSend.Text);
             }
             catch
             {
@@ -117,12 +114,26 @@ namespace Multichat_client
         {
             string completeMessage = EncodeMessage(type, username, message);
 
-            byte[] buffer = Encoding.ASCII.GetBytes(completeMessage);
-            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+            await SendMessageOnNetwork(completeMessage);
 
-            AddMessage(message);
+            message = DecodeMessage(message);
+
+            AddMessage($"{username}: {message}");
             txtMessageToBeSend.Clear();
             txtMessageToBeSend.Focus();
+        }
+
+        private async Task SendDisconnectMessageAsync(string type, string username, string message)
+        {
+            string completeMessage = EncodeMessage(type, username, message);
+
+            await SendMessageOnNetwork(completeMessage);
+        }
+
+        private async Task SendMessageOnNetwork(string message)
+        {
+            byte[] buffer = Encoding.ASCII.GetBytes(message);
+            await networkStream.WriteAsync(buffer, 0, buffer.Length);
         }
 
 
@@ -147,15 +158,26 @@ namespace Multichat_client
 
         private string DecodeMessage(string str)
         {
-            str = Regex.Replace(str, "[&#124]", "|");
-            str = Regex.Replace(str, "[&#64]", "@");
+            str = Regex.Replace(str, "&#124", "|");
+            str = Regex.Replace(str, "&#64", "@");
 
             return str;
         }
 
-        private async Task DisconnectFromServerAsync()
+        private async Task DisconnectFromServerAsync(string username)
         {
-            await SendMessageAsync("INFO", "username", "DISCONNECT");
+            await SendDisconnectMessageAsync("INFO", username, "DISCONNECTING");
+            // disable or enable buttons
+            btnConnectWithServer.Enabled = true;
+            btnSendMessage.Enabled = false;
+            btnDisconnectFromServer.Enabled = false;
+
+            //disable or enable text fields
+            txtUsername.Enabled = true;
+            txtChatServerIP.Enabled = true;
+            txtChatServerPort.Enabled = true;
+            txtMessageToBeSend.Enabled = false;
+            txtBufferSize.Enabled = true;
         }
 
         private async Task CreateConnectionAsync()
@@ -163,8 +185,9 @@ namespace Multichat_client
             int portNumber = StringToInt(txtChatServerPort.Text);
             int bufferSize = StringToInt(txtBufferSize.Text);
             string IPaddress = txtChatServerIP.Text;
+            string username = txtUsername.Text;
 
-            if (!ValidateClientPreferences(IPaddress, portNumber, bufferSize))
+            if (!ValidateClientPreferences(username, IPaddress, portNumber, bufferSize))
             {
                 return;
             }
@@ -174,9 +197,17 @@ namespace Multichat_client
                 try
                 {
                     await tcpClient.ConnectAsync(IPaddress, portNumber);
+                    // disable or enable buttons
                     btnConnectWithServer.Enabled = false;
                     btnSendMessage.Enabled = true;
                     btnDisconnectFromServer.Enabled = true;
+                    
+                    //disable or enable text fields
+                    txtUsername.Enabled = false;
+                    txtChatServerIP.Enabled = false;
+                    txtChatServerPort.Enabled = false;
+                    txtMessageToBeSend.Enabled = true;
+                    txtBufferSize.Enabled = false;
                     await Task.Run(() => ReceiveData(bufferSize));
                 }
                 catch (SocketException ex)
@@ -207,16 +238,24 @@ namespace Multichat_client
                 }
                 while (networkStream.DataAvailable);
 
-                string decodedType = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\@)(.*?)(?=\|)"));
-                string decodedUsername = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|)(.*?)(?=\|)"));
-                string decodedMessage = DecodeMessage(FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|)(.*?)(?=\@)")));
+                string decodedType = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\@)(.*?)(?=\|{2})"));
+                string decodedUsername = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|{2})(.*?)(?=\|{2})"));
+                string decodedMessage = DecodeMessage(FilterProtocol(FilterProtocol(completeMessage.ToString(), new Regex(@"\|(?:.(?!\|))+$")), new Regex(@"(?<=\|{2})(.*?)(?=\@)")));
 
-                if (decodedType == "INFO" && decodedMessage == "disconnect")
+                if (decodedType == "INFO" && decodedMessage == "DISCONNECTING")
+                {
+                    await SendDisconnectMessageAsync("INFO", txtUsername.Text, "DISCONNECT");
+                    break;
+                }
+
+                if (decodedType == "INFO" && decodedMessage == "DISCONNECT")
                 {
                     break;
                 }
 
-                AddMessage($"{decodedUsername}: {decodedMessage}");
+                if (decodedType == "MESSAGE") {
+                    AddMessage($"{decodedUsername}: {decodedMessage}");
+                }
             }
 
             networkStream.Close();
@@ -243,8 +282,15 @@ namespace Multichat_client
             return splitValues.All(r => byte.TryParse(r, out tempForParsing));
         }
 
-        private bool ValidateClientPreferences(string IPaddress, int portNumber, int bufferSize)
+        private bool ValidateClientPreferences(string username, string IPaddress, int portNumber, int bufferSize)
         {
+
+            if (String.IsNullOrWhiteSpace(username))
+            {
+                MessageBox.Show("Please fill in a username", "No username", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
             if (!ValidateIPv4(IPaddress))
             {
                 MessageBox.Show("An invalid IP address has been given! Try another IP address", "Invalid IP address", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -272,7 +318,5 @@ namespace Multichat_client
 
             return number;
         }
-
-
     }
 }

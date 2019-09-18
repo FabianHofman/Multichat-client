@@ -17,15 +17,14 @@ namespace Mutliclient_server
 {
     public partial class Server : Form
     {
-        TcpClient tcpClient;
-        NetworkStream networkStream;
 
         protected delegate void UpdateDisplayDelegate(string message);
+
+        List<TcpClient> listConnectedClients = new List<TcpClient>();
 
         public Server()
         {
             InitializeComponent();
-            btnSend.Enabled = false;
         }
         private void AddMessage(string message)
         {
@@ -44,19 +43,6 @@ namespace Mutliclient_server
             listMessages.Items.Add(message);
         }
 
-
-        private async void BtnSend_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                await SendMessageAsync("MESSAGE", "username", txtMessage.Text);
-            }
-            catch
-            {
-                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
         private async void BtnStartStop_Click(object sender, EventArgs e)
         {
             try
@@ -67,37 +53,46 @@ namespace Mutliclient_server
             {
                 MessageBox.Show(ex.Message, "Port already in use", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            
+
         }
 
-        private async void TxtMessage_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            if (txtMessage.Text == "" || networkStream == null || !(e.KeyChar == (char)13))
-            {
-                return;
-            }
-
-            try
-            {
-                await SendMessageAsync("MESSAGE", "username", txtMessage.Text);
-            }
-            catch
-            {
-                MessageBox.Show("Something went wrong, try again later!", "Invalid operation", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private async Task SendMessageAsync(string type, string username, string message)
+        private async Task SendMessageAsync(NetworkStream stream, string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
 
-            byte[] buffer = Encoding.ASCII.GetBytes(completeMessage);
-            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+            await SendMessageOnNetworkAsync(stream, completeMessage);
 
-            AddMessage(message);
-            txtMessage.Clear();
-            txtMessage.Focus();
+            message = DecodeMessage(message);
+
+            AddMessage($"{username}: {message}");
         }
+
+        private async Task BroadcastMessage(TcpClient client, string type, string username, string message)
+        {
+            string completeMessage = EncodeMessage(type, username, message);
+
+            foreach(TcpClient user in listConnectedClients)
+            {
+                if (user.Client.RemoteEndPoint != client.Client.RemoteEndPoint)
+                {
+                    await SendMessageOnNetworkAsync(user.GetStream(), completeMessage);
+                }
+            }
+        }
+
+        private async Task SendDisconnectMessageAsync(NetworkStream stream, string type, string username, string message)
+        {
+            string completeMessage = EncodeMessage(type, username, message);
+
+            await SendMessageOnNetworkAsync(stream, completeMessage);
+        }
+
+        private async Task SendMessageOnNetworkAsync(NetworkStream stream, string message)
+        {
+            byte[] buffer = Encoding.ASCII.GetBytes(message);
+            await stream.WriteAsync(buffer, 0, buffer.Length);
+        }
+
 
         private async Task CreateServerAsync()
         {
@@ -105,7 +100,7 @@ namespace Mutliclient_server
             int portNumber = StringToInt(txtPort.Text);
             int bufferSize = StringToInt(txtBufferSize.Text);
 
-            if (!ValidateClientPreferences(IPaddress, portNumber, bufferSize))
+            if (!ValidateServerPreferences(IPaddress, portNumber, bufferSize))
             {
                 return;
             }
@@ -116,21 +111,24 @@ namespace Mutliclient_server
             AddMessage($"[Server] Server started! Accepting users on port {portNumber}");
 
             btnStartStop.Enabled = false;
-
-            tcpClient = await tcpListener.AcceptTcpClientAsync();
-
-            btnSend.Enabled = true;
-            await Task.Run(() => ReceiveData(bufferSize));
+            
+            while (true)
+            {
+                TcpClient client = await tcpListener.AcceptTcpClientAsync();
+                listConnectedClients.Add(client);
+                await Task.Run(() => ReceiveData(client, bufferSize));
+            }
+            
         }
 
-        private async void ReceiveData(int bufferSize)
+        private async void ReceiveData(TcpClient client, int bufferSize)
         {
             byte[] buffer = new byte[bufferSize];
 
-            networkStream = tcpClient.GetStream();
+            NetworkStream stream  = client.GetStream();
             AddMessage($"[Server] A client has connected!"); //TODO: Change client for username (verzin eigen protocol)
 
-            while (networkStream.CanRead)
+            while (stream.CanRead)
             {
                 StringBuilder completeMessage = new StringBuilder();
 
@@ -138,34 +136,45 @@ namespace Mutliclient_server
                 {
                     try
                     {
-                        int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+                        int readBytes = await stream.ReadAsync(buffer, 0, bufferSize);
                         string message = Encoding.ASCII.GetString(buffer, 0, readBytes);
                         completeMessage.Append(message);
                     }
                     catch (IOException ex)
                     {
                         MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        completeMessage.Clear();
+                        completeMessage.Append("@INFO||unknown||DISCONNECT");
                         break;
                     }
                 }
-                while (networkStream.DataAvailable);
+                while (stream.DataAvailable);
 
                 string decodedType = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\@)(.*?)(?=\|)"));
                 string decodedUsername = FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|{2})(.*?)(?=\|{2})"));
-                string decodedMessage = DecodeMessage(FilterProtocol(completeMessage.ToString(), new Regex(@"(?<=\|{2})(.*?)(?=\@)"))); //andere regex verzinnen
+                string decodedMessage = DecodeMessage(FilterProtocol(FilterProtocol(completeMessage.ToString(), new Regex(@"\|(?:.(?!\|))+$")), new Regex(@"(?<=\|{2})(.*?)(?=\@)")));
 
-                if (decodedType == "INFO" && decodedMessage == "disconnect")
+                if (decodedType == "INFO" && decodedMessage == "DISCONNECTING")
+                {
+                    await SendDisconnectMessageAsync(stream, "INFO", decodedUsername, "DISCONNECT");
+                    break;
+                }
+
+                if (decodedType == "INFO" && decodedMessage == "DISCONNECT")
                 {
                     break;
                 }
 
+                await BroadcastMessage(client, decodedType, decodedUsername, decodedMessage);
                 AddMessage($"{decodedUsername}: {decodedMessage}");
 
                 AddMessage(completeMessage.ToString());
             }
 
-            networkStream.Close();
-            tcpClient.Close();
+            stream.Close();
+            client.Close();
+
+            listConnectedClients.RemoveAll(user => !user.Connected);
 
             AddMessage($"[Server] Connection with a client has closed!");
         }
@@ -191,8 +200,8 @@ namespace Mutliclient_server
 
         private string DecodeMessage(string str)
         {
-            str = Regex.Replace(str, "[&#124]", "|");
-            str = Regex.Replace(str, "[&#64]", "@");
+            str = Regex.Replace(str, "&#124", "|");
+            str = Regex.Replace(str, "&#64", "@");
 
             return str;
         }
@@ -223,7 +232,7 @@ namespace Mutliclient_server
             return splitValues.All(r => byte.TryParse(r, out tempForParsing));
         }
 
-        private bool ValidateClientPreferences(string IPaddress, int portNumber, int bufferSize)
+        private bool ValidateServerPreferences(string IPaddress, int portNumber, int bufferSize)
         {
             if (!ValidateIPv4(IPaddress))
             {

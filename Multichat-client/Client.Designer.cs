@@ -29,6 +29,9 @@
         private void InitializeComponent()
         {
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.txtUsername = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.btnDisconnectFromServer = new System.Windows.Forms.Button();
             this.txtBufferSize = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -39,13 +42,14 @@
             this.btnSendMessage = new System.Windows.Forms.Button();
             this.txtMessageToBeSend = new System.Windows.Forms.TextBox();
             this.listChats = new System.Windows.Forms.ListBox();
-            this.btnDisconnectFromServer = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.txtUsername);
+            this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Controls.Add(this.btnDisconnectFromServer);
             this.groupBox1.Controls.Add(this.txtBufferSize);
             this.groupBox1.Controls.Add(this.label3);
@@ -59,14 +63,43 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox1.Size = new System.Drawing.Size(184, 330);
+            this.groupBox1.Size = new System.Drawing.Size(184, 388);
             this.groupBox1.TabIndex = 10;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Connect to Server";
             // 
+            // txtUsername
+            // 
+            this.txtUsername.Location = new System.Drawing.Point(23, 55);
+            this.txtUsername.Margin = new System.Windows.Forms.Padding(2);
+            this.txtUsername.Name = "txtUsername";
+            this.txtUsername.Size = new System.Drawing.Size(141, 23);
+            this.txtUsername.TabIndex = 9;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(20, 29);
+            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(73, 17);
+            this.label4.TabIndex = 8;
+            this.label4.Text = "Username";
+            // 
+            // btnDisconnectFromServer
+            // 
+            this.btnDisconnectFromServer.Location = new System.Drawing.Point(25, 348);
+            this.btnDisconnectFromServer.Margin = new System.Windows.Forms.Padding(2);
+            this.btnDisconnectFromServer.Name = "btnDisconnectFromServer";
+            this.btnDisconnectFromServer.Size = new System.Drawing.Size(139, 27);
+            this.btnDisconnectFromServer.TabIndex = 7;
+            this.btnDisconnectFromServer.Text = "Disconnect";
+            this.btnDisconnectFromServer.UseVisualStyleBackColor = true;
+            this.btnDisconnectFromServer.Click += new System.EventHandler(this.BtnDisconnectFromServer_Click);
+            // 
             // txtBufferSize
             // 
-            this.txtBufferSize.Location = new System.Drawing.Point(29, 200);
+            this.txtBufferSize.Location = new System.Drawing.Point(25, 258);
             this.txtBufferSize.Name = "txtBufferSize";
             this.txtBufferSize.Size = new System.Drawing.Size(139, 23);
             this.txtBufferSize.TabIndex = 6;
@@ -75,7 +108,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(29, 177);
+            this.label3.Location = new System.Drawing.Point(25, 235);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(77, 17);
             this.label3.TabIndex = 5;
@@ -84,7 +117,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(26, 102);
+            this.label2.Location = new System.Drawing.Point(22, 160);
             this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(113, 17);
@@ -93,7 +126,7 @@
             // 
             // txtChatServerPort
             // 
-            this.txtChatServerPort.Location = new System.Drawing.Point(29, 127);
+            this.txtChatServerPort.Location = new System.Drawing.Point(25, 185);
             this.txtChatServerPort.Name = "txtChatServerPort";
             this.txtChatServerPort.Size = new System.Drawing.Size(139, 23);
             this.txtChatServerPort.TabIndex = 3;
@@ -101,7 +134,7 @@
             // 
             // txtChatServerIP
             // 
-            this.txtChatServerIP.Location = new System.Drawing.Point(29, 60);
+            this.txtChatServerIP.Location = new System.Drawing.Point(25, 118);
             this.txtChatServerIP.Margin = new System.Windows.Forms.Padding(2);
             this.txtChatServerIP.Name = "txtChatServerIP";
             this.txtChatServerIP.Size = new System.Drawing.Size(141, 23);
@@ -110,7 +143,7 @@
             // 
             // btnConnectWithServer
             // 
-            this.btnConnectWithServer.Location = new System.Drawing.Point(29, 249);
+            this.btnConnectWithServer.Location = new System.Drawing.Point(25, 307);
             this.btnConnectWithServer.Margin = new System.Windows.Forms.Padding(2);
             this.btnConnectWithServer.Name = "btnConnectWithServer";
             this.btnConnectWithServer.Size = new System.Drawing.Size(139, 27);
@@ -122,7 +155,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(26, 34);
+            this.label1.Location = new System.Drawing.Point(22, 92);
             this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(99, 17);
@@ -168,17 +201,6 @@
             this.listChats.Size = new System.Drawing.Size(610, 420);
             this.listChats.TabIndex = 7;
             // 
-            // btnDisconnectFromServer
-            // 
-            this.btnDisconnectFromServer.Location = new System.Drawing.Point(29, 290);
-            this.btnDisconnectFromServer.Margin = new System.Windows.Forms.Padding(2);
-            this.btnDisconnectFromServer.Name = "btnDisconnectFromServer";
-            this.btnDisconnectFromServer.Size = new System.Drawing.Size(139, 27);
-            this.btnDisconnectFromServer.TabIndex = 7;
-            this.btnDisconnectFromServer.Text = "Disconnect";
-            this.btnDisconnectFromServer.UseVisualStyleBackColor = true;
-            this.btnDisconnectFromServer.Click += new System.EventHandler(this.BtnDisconnectFromServer_Click);
-            // 
             // Client
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -214,6 +236,8 @@
         private System.Windows.Forms.TextBox txtBufferSize;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnDisconnectFromServer;
+        private System.Windows.Forms.TextBox txtUsername;
+        private System.Windows.Forms.Label label4;
     }
 }
 
