@@ -63,7 +63,7 @@ namespace Mutliclient_server
         private void UpdateMessageList(string message)
         {
             listMessages.Items.Add(message);
-            listMessages.SelectedIndex = listMessages.Items.Count - 1;
+            //listMessages.SelectedIndex = listMessages.Items.Count - 1;
         }
 
         private void UpdateClientList()
@@ -110,8 +110,22 @@ namespace Mutliclient_server
 
         private async Task SendMessageOnNetworkAsync(NetworkStream stream, string message)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-            await stream.WriteAsync(buffer, 0, buffer.Length);
+            int bufferSize = StringToInt(txtBufferSize.Text);
+
+            do
+            {
+                if (bufferSize > message.Length)
+                {
+                    bufferSize = message.Length;
+                }
+
+                string substring = message.Substring(0, bufferSize);
+                message = message.Remove(0, bufferSize);
+                byte[] buffer = Encoding.ASCII.GetBytes(substring);
+                await stream.WriteAsync(buffer, 0, bufferSize);
+            }
+            while (message.Length > 0);
+            
         }
 
         // Eveything related to the buttons
@@ -148,7 +162,7 @@ namespace Mutliclient_server
 
             tcpListener.Stop();
 
-            AddMessage("[Server] Closed!");
+            
 
         }
 
@@ -165,9 +179,11 @@ namespace Mutliclient_server
             started = false;
 
             TcpClient tcpClient = new TcpClient();
-            tcpClient.Connect("127.0.0.1", StringToInt(txtPort.Text));
-            await SendDisconnectMessageAsync(tcpClient.GetStream(), "INFO", username, "DISCONNECTING");
+            await tcpClient.ConnectAsync("127.0.0.1", StringToInt(txtPort.Text));
+            await SendDisconnectMessageAsync(tcpClient.GetStream(), "INFO", username, "DISCONNECT");
             tcpClient.Close();
+
+            AddMessage("[Server] Closed!");
 
             btnStopServer.Enabled = false;
             btnStartServer.Enabled = true;
@@ -195,7 +211,7 @@ namespace Mutliclient_server
                             string message = Encoding.ASCII.GetString(buffer, 0, readBytes);
                             completeMessage.Append(message);
                         }
-                        while (completeMessage.ToString().IndexOf("@") < 0);
+                        while (completeMessage.ToString().IndexOf("@", 1) < 0);
                     }
                     catch (IOException ex)
                     {
@@ -299,7 +315,7 @@ namespace Mutliclient_server
                 return false;
             }
 
-            if (bufferSize <= 1)
+            if (bufferSize <= 0)
             {
                 MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;

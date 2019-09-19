@@ -51,6 +51,7 @@ namespace Multichat_client
             }
             catch (IOException ex)
             {
+                AddMessage("Disconnected!");
                 MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
                 // disable or enable buttons
@@ -64,7 +65,7 @@ namespace Multichat_client
                 txtChatServerPort.Enabled = true;
                 txtMessageToBeSend.Enabled = false;
                 txtBufferSize.Enabled = true;
-                AddMessage("Disconnected!");
+                
             }
             catch
             {
@@ -91,7 +92,7 @@ namespace Multichat_client
 
         private async void TxtMessageToBeSend_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (txtMessageToBeSend.Text == "" || networkStream == null || !(e.KeyChar == (char)13))
+            if (String.IsNullOrWhiteSpace(txtMessageToBeSend.Text) || networkStream == null || !(e.KeyChar == (char)13))
             {
                 return;
             }
@@ -147,8 +148,20 @@ namespace Multichat_client
 
         private async Task SendMessageOnNetwork(string message)
         {
-            byte[] buffer = Encoding.ASCII.GetBytes(message);
-            await networkStream.WriteAsync(buffer, 0, buffer.Length);
+            int bufferSize = StringToInt(txtBufferSize.Text);
+            do
+            {
+                if(bufferSize > message.Length)
+                {
+                    bufferSize = message.Length;
+                }
+
+                string substring = message.Substring(0, bufferSize);
+                message = message.Remove(0, bufferSize);
+                byte[] buffer = Encoding.ASCII.GetBytes(substring);
+                await networkStream.WriteAsync(buffer, 0, bufferSize);
+            }
+            while (message.Length > 0);
         }
 
         // Everything related to buttons
@@ -239,7 +252,7 @@ namespace Multichat_client
                         message = Encoding.ASCII.GetString(buffer, 0, readBytes);
                         completeMessage.Append(message);
                     }
-                    while (completeMessage.ToString().IndexOf("@") < 0);                    
+                    while (completeMessage.ToString().IndexOf("@", 1) < 0);                    
                 }
                 while (networkStream.DataAvailable);
 
@@ -340,7 +353,7 @@ namespace Multichat_client
                 return false;
             }
 
-            if (bufferSize <= 1)
+            if (bufferSize <= 0)
             {
                 MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
