@@ -28,10 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.btnSend = new System.Windows.Forms.Button();
-            this.txtMessage = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
@@ -47,56 +43,9 @@
             this.txtServerName = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.groupBox3.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // groupBox3
-            // 
-            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox3.Controls.Add(this.btnSend);
-            this.groupBox3.Controls.Add(this.txtMessage);
-            this.groupBox3.Controls.Add(this.label3);
-            this.groupBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox3.Location = new System.Drawing.Point(372, 11);
-            this.groupBox3.Margin = new System.Windows.Forms.Padding(2);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox3.Size = new System.Drawing.Size(305, 211);
-            this.groupBox3.TabIndex = 5;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Send Messages";
-            // 
-            // btnSend
-            // 
-            this.btnSend.Location = new System.Drawing.Point(31, 116);
-            this.btnSend.Margin = new System.Windows.Forms.Padding(2);
-            this.btnSend.Name = "btnSend";
-            this.btnSend.Size = new System.Drawing.Size(94, 25);
-            this.btnSend.TabIndex = 2;
-            this.btnSend.Text = "Send";
-            this.btnSend.UseVisualStyleBackColor = true;
-            this.btnSend.Click += new System.EventHandler(this.BtnSend_Click);
-            // 
-            // txtMessage
-            // 
-            this.txtMessage.Location = new System.Drawing.Point(31, 70);
-            this.txtMessage.Margin = new System.Windows.Forms.Padding(2);
-            this.txtMessage.Name = "txtMessage";
-            this.txtMessage.Size = new System.Drawing.Size(254, 23);
-            this.txtMessage.TabIndex = 1;
-            this.txtMessage.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.TxtMessage_KeyPress);
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(28, 40);
-            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(65, 17);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "Message";
             // 
             // groupBox2
             // 
@@ -276,14 +225,11 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(692, 832);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.MinimumSize = new System.Drawing.Size(708, 871);
             this.Name = "Server";
             this.Text = "Server";
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             this.groupBox1.ResumeLayout(false);
@@ -294,11 +240,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.Button btnSend;
-        private System.Windows.Forms.TextBox txtMessage;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label4;
