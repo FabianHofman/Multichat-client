@@ -52,6 +52,19 @@ namespace Multichat_client
             catch (IOException ex)
             {
                 MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                
+                // disable or enable buttons
+                btnConnectWithServer.Enabled = true;
+                btnSendMessage.Enabled = false;
+                btnDisconnectFromServer.Enabled = false;
+
+                //disable or enable text fields
+                txtUsername.Enabled = true;
+                txtChatServerIP.Enabled = true;
+                txtChatServerPort.Enabled = true;
+                txtMessageToBeSend.Enabled = false;
+                txtBufferSize.Enabled = true;
+                AddMessage("Disconnected!");
             }
             catch
             {
@@ -61,7 +74,7 @@ namespace Multichat_client
 
         private async void BtnSendMessage_Click(object sender, EventArgs e)
         {
-            if (txtMessageToBeSend.Text == "" || networkStream == null)
+            if (String.IsNullOrWhiteSpace(txtMessageToBeSend.Text) || networkStream == null)
             {
                 return;
             }
@@ -109,6 +122,7 @@ namespace Multichat_client
         private void UpdateDisplay(string message)
         {
             listChats.Items.Add(message);
+            listChats.SelectedIndex = listChats.Items.Count - 1;
         }
 
         // Everything related to messages
@@ -219,6 +233,7 @@ namespace Multichat_client
 
                 if (decodedType == "INFO" && decodedMessage == "DISCONNECTING")
                 {
+                    AddMessage("Server is closing!");
                     await SendDisconnectMessageAsync("INFO", txtUsername.Text, "DISCONNECT");
                     break;
                 }
@@ -308,7 +323,7 @@ namespace Multichat_client
                 return false;
             }
 
-            if (bufferSize < 1)
+            if (bufferSize <= 1)
             {
                 MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;

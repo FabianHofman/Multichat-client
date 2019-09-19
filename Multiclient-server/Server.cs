@@ -18,9 +18,11 @@ namespace Mutliclient_server
     public partial class Server : Form
     {
 
-        protected delegate void UpdateDisplayDelegate(string message);
+        protected delegate void UpdateMessageListDelegate(string message);
+        protected delegate void UpdateClientListDelegate();
 
         List<TcpClient> listConnectedClients = new List<TcpClient>();
+        bool started = false;
 
         public Server()
         {
@@ -28,7 +30,7 @@ namespace Mutliclient_server
         }
 
         // Everything related to user interface
-        private async void BtnStartStop_Click(object sender, EventArgs e)
+        private async void BtnStartServer_Click(object sender, EventArgs e)
         {
             try
             {
@@ -38,24 +40,50 @@ namespace Mutliclient_server
             {
                 MessageBox.Show(ex.Message, "Port already in use", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
 
+        private async void BtnStopServer_Click(object sender, EventArgs e)
+        {
+            await StopServerAsync("INFO", "Server", "DISCONNECTING");
         }
 
         private void AddMessage(string message)
         {
             if (listMessages.InvokeRequired)
             {
-                listMessages.Invoke(new UpdateDisplayDelegate(UpdateDisplay), new object[] { message });
+                listMessages.Invoke(new UpdateMessageListDelegate(UpdateMessageList), new object[] { message });
             }
             else
             {
-                UpdateDisplay(message);
+                UpdateMessageList(message);
             }
         }
 
-        private void UpdateDisplay(string message)
+        private void UpdateMessageList(string message)
         {
             listMessages.Items.Add(message);
+            listMessages.SelectedIndex = listMessages.Items.Count - 1;
+        }
+
+        private void UpdateClientList()
+        {
+            if (listClients.InvokeRequired)
+            {
+                listClients.Invoke(new UpdateClientListDelegate(ControlClientList));
+            }
+            else
+            {
+                ControlClientList();
+            }
+        }
+
+        private void ControlClientList()
+        {
+            listClients.Items.Clear();
+            foreach (TcpClient client in listConnectedClients)
+            {
+                listClients.Items.Add(client.Client.RemoteEndPoint.ToString());
+            }
         }
 
         // Everything related to messages
@@ -63,7 +91,7 @@ namespace Mutliclient_server
         {
             string completeMessage = EncodeMessage(type, username, message);
 
-            foreach(TcpClient user in listConnectedClients)
+            foreach (TcpClient user in listConnectedClients)
             {
                 if (user.Client.RemoteEndPoint != client.Client.RemoteEndPoint)
                 {
@@ -100,17 +128,42 @@ namespace Mutliclient_server
             TcpListener tcpListener = new TcpListener(IPAddress.Parse(IPaddress), portNumber);
             tcpListener.Start();
 
+            started = true;
+
             AddMessage($"[Server] Server started! Accepting users on port {portNumber}");
 
-            btnStartStop.Enabled = false;
-            
-            while (true)
+            btnStartServer.Enabled = false;
+
+            do
             {
-                TcpClient client = await tcpListener.AcceptTcpClientAsync();
-                listConnectedClients.Add(client);
-                await Task.Run(() => ReceiveData(client, bufferSize));
+                if (tcpListener.Pending())
+                {
+                    TcpClient client = await tcpListener.AcceptTcpClientAsync();
+
+                    listConnectedClients.Add(client);
+                    UpdateClientList();
+                    await Task.Run(() => ReceiveData(client, bufferSize));
+                }
             }
-            
+            while (started);
+
+            tcpListener.Stop();
+
+            AddMessage("[Server] Closed!");
+
+        }
+
+        private async Task StopServerAsync(string type, string username, string message)
+        {
+            AddMessage("[Server] Closing...");
+            string completeMessage = EncodeMessage(type, username, message);
+
+            foreach (TcpClient user in listConnectedClients)
+            {
+                await SendMessageOnNetworkAsync(user.GetStream(), completeMessage);
+            }
+
+            started = false;
         }
 
         // Everything related to recieving data.
@@ -118,7 +171,7 @@ namespace Mutliclient_server
         {
             byte[] buffer = new byte[bufferSize];
 
-            NetworkStream stream  = client.GetStream();
+            NetworkStream stream = client.GetStream();
             AddMessage($"[Server] A client has connected!"); //TODO: Change client for username (verzin eigen protocol)
 
             while (stream.CanRead)
@@ -166,6 +219,7 @@ namespace Mutliclient_server
             client.Close();
 
             listConnectedClients.RemoveAll(user => !user.Connected);
+            UpdateClientList();
 
             AddMessage($"[Server] Connection with a client has closed!");
         }
@@ -231,7 +285,7 @@ namespace Mutliclient_server
                 return false;
             }
 
-            if (bufferSize < 1)
+            if (bufferSize <= 1)
             {
                 MessageBox.Show("An invalid amount of buffer size has been given! Try something else.", "Invalid amount of Buffer Size", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;

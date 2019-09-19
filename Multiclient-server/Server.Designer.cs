@@ -34,11 +34,12 @@
             this.listMessages = new System.Windows.Forms.ListBox();
             this.listClients = new System.Windows.Forms.ListBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnStopServer = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
             this.txtPort = new System.Windows.Forms.TextBox();
             this.txtBufferSize = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.btnStartStop = new System.Windows.Forms.Button();
+            this.btnStartServer = new System.Windows.Forms.Button();
             this.txtServerIP = new System.Windows.Forms.TextBox();
             this.txtServerName = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -114,11 +115,12 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnStopServer);
             this.groupBox1.Controls.Add(this.label7);
             this.groupBox1.Controls.Add(this.txtPort);
             this.groupBox1.Controls.Add(this.txtBufferSize);
             this.groupBox1.Controls.Add(this.label6);
-            this.groupBox1.Controls.Add(this.btnStartStop);
+            this.groupBox1.Controls.Add(this.btnStartServer);
             this.groupBox1.Controls.Add(this.txtServerIP);
             this.groupBox1.Controls.Add(this.txtServerName);
             this.groupBox1.Controls.Add(this.label2);
@@ -132,6 +134,17 @@
             this.groupBox1.TabIndex = 3;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Server Settings";
+            // 
+            // btnStopServer
+            // 
+            this.btnStopServer.Location = new System.Drawing.Point(124, 170);
+            this.btnStopServer.Margin = new System.Windows.Forms.Padding(2);
+            this.btnStopServer.Name = "btnStopServer";
+            this.btnStopServer.Size = new System.Drawing.Size(92, 25);
+            this.btnStopServer.TabIndex = 8;
+            this.btnStopServer.Text = "Stop";
+            this.btnStopServer.UseVisualStyleBackColor = true;
+            this.btnStopServer.Click += new System.EventHandler(this.BtnStopServer_Click);
             // 
             // label7
             // 
@@ -171,16 +184,16 @@
             this.label6.TabIndex = 4;
             this.label6.Text = "Buffer size";
             // 
-            // btnStartStop
+            // btnStartServer
             // 
-            this.btnStartStop.Location = new System.Drawing.Point(25, 170);
-            this.btnStartStop.Margin = new System.Windows.Forms.Padding(2);
-            this.btnStartStop.Name = "btnStartStop";
-            this.btnStartStop.Size = new System.Drawing.Size(92, 25);
-            this.btnStartStop.TabIndex = 3;
-            this.btnStartStop.Text = "Start";
-            this.btnStartStop.UseVisualStyleBackColor = true;
-            this.btnStartStop.Click += new System.EventHandler(this.BtnStartStop_Click);
+            this.btnStartServer.Location = new System.Drawing.Point(25, 170);
+            this.btnStartServer.Margin = new System.Windows.Forms.Padding(2);
+            this.btnStartServer.Name = "btnStartServer";
+            this.btnStartServer.Size = new System.Drawing.Size(92, 25);
+            this.btnStartServer.TabIndex = 3;
+            this.btnStartServer.Text = "Start";
+            this.btnStartServer.UseVisualStyleBackColor = true;
+            this.btnStartServer.Click += new System.EventHandler(this.BtnStartServer_Click);
             // 
             // txtServerIP
             // 
@@ -250,11 +263,12 @@
         private System.Windows.Forms.TextBox txtPort;
         private System.Windows.Forms.TextBox txtBufferSize;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.Button btnStartStop;
+        private System.Windows.Forms.Button btnStartServer;
         private System.Windows.Forms.TextBox txtServerIP;
         private System.Windows.Forms.TextBox txtServerName;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnStopServer;
     }
 }
 

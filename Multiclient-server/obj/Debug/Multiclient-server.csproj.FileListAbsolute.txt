@@ -1,0 +1,10 @@
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\bin\Debug\Mutliclient-server.exe.config
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\bin\Debug\Mutliclient-server.exe
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\bin\Debug\Mutliclient-server.pdb
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Multiclient-server.csprojAssemblyReference.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Mutliclient_server.Server.resources
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Mutliclient_server.Properties.Resources.resources
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Multiclient-server.csproj.GenerateResource.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Multiclient-server.csproj.CoreCompileInputs.cache
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Mutliclient-server.exe
+D:\School\Lesjaar 3\NotS\WIN\Beroepsproducten\Multichat\Multiclient-server\obj\Debug\Mutliclient-server.pdb
