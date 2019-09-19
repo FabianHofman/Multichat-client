@@ -274,7 +274,13 @@ namespace Multichat_client
 
                 if (decodedType == "MESSAGE")
                 {
-                    AddMessage($"{decodedUsername}: {decodedMessage}");
+                    if (decodedUsername == "Server")
+                    {
+                        AddMessage($"{decodedMessage}");
+                    } else
+                    {
+                        AddMessage($"{decodedUsername}: {decodedMessage}");
+                    }
                 }
             }
 

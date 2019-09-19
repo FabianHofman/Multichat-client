@@ -150,6 +150,10 @@ namespace Mutliclient_server
             btnStartServer.Enabled = false;
             btnStopServer.Enabled = true;
 
+            txtBufferSize.Enabled = false;
+            txtPort.Enabled = false;
+            txtServerIP.Enabled = false;
+
             do
             {
                 TcpClient client = await tcpListener.AcceptTcpClientAsync();
@@ -162,7 +166,12 @@ namespace Mutliclient_server
 
             tcpListener.Stop();
 
-            
+            btnStartServer.Enabled = true;
+            btnStopServer.Enabled = false;
+
+            txtBufferSize.Enabled = true;
+            txtPort.Enabled = true;
+            txtServerIP.Enabled = true;
 
         }
 
@@ -243,7 +252,7 @@ namespace Mutliclient_server
                     await BroadcastMessage(client, decodedType, decodedUsername, decodedMessage);
                     AddMessage($"{decodedUsername}: {decodedMessage}");
                 }
-            }
+            }            
 
             stream.Close();
             client.Close();
