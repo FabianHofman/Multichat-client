@@ -65,7 +65,7 @@ namespace Multichat_client
                 txtChatServerPort.Enabled = true;
                 txtMessageToBeSend.Enabled = false;
                 txtBufferSize.Enabled = true;
-                
+
             }
             catch
             {
@@ -151,7 +151,7 @@ namespace Multichat_client
             int bufferSize = StringToInt(txtBufferSize.Text);
             do
             {
-                if(bufferSize > message.Length)
+                if (bufferSize > message.Length)
                 {
                     bufferSize = message.Length;
                 }
@@ -252,7 +252,7 @@ namespace Multichat_client
                         message = Encoding.ASCII.GetString(buffer, 0, readBytes);
                         completeMessage.Append(message);
                     }
-                    while (completeMessage.ToString().IndexOf("@", 1) < 0);                    
+                    while (completeMessage.ToString().IndexOf("@", 1) < 0);
                 }
                 while (networkStream.DataAvailable);
 
@@ -274,13 +274,7 @@ namespace Multichat_client
 
                 if (decodedType == "MESSAGE")
                 {
-                    if (decodedUsername == "Server")
-                    {
-                        AddMessage($"{decodedMessage}");
-                    } else
-                    {
-                        AddMessage($"{decodedUsername}: {decodedMessage}");
-                    }
+                    AddMessage($"{decodedUsername}: {decodedMessage}");
                 }
             }
 
