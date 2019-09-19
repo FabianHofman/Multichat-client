@@ -52,7 +52,7 @@ namespace Multichat_client
             catch (IOException ex)
             {
                 MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                
+
                 // disable or enable buttons
                 btnConnectWithServer.Enabled = true;
                 btnSendMessage.Enabled = false;
@@ -181,7 +181,7 @@ namespace Multichat_client
             }
 
             AddMessage("Connecting...");
-            using(tcpClient = new TcpClient())
+            using (tcpClient = new TcpClient())
                 try
                 {
                     await tcpClient.ConnectAsync(IPaddress, portNumber);
@@ -189,14 +189,26 @@ namespace Multichat_client
                     btnConnectWithServer.Enabled = false;
                     btnSendMessage.Enabled = true;
                     btnDisconnectFromServer.Enabled = true;
-                    
+
                     //disable or enable text fields
                     txtUsername.Enabled = false;
                     txtChatServerIP.Enabled = false;
                     txtChatServerPort.Enabled = false;
                     txtMessageToBeSend.Enabled = true;
                     txtBufferSize.Enabled = false;
+
                     await Task.Run(() => ReceiveData(bufferSize));
+                    // disable or enable buttons
+                    btnConnectWithServer.Enabled = true;
+                    btnSendMessage.Enabled = false;
+                    btnDisconnectFromServer.Enabled = false;
+
+                    //disable or enable text fields
+                    txtUsername.Enabled = true;
+                    txtChatServerIP.Enabled = true;
+                    txtChatServerPort.Enabled = true;
+                    txtMessageToBeSend.Enabled = false;
+                    txtBufferSize.Enabled = true;
                 }
                 catch (SocketException ex)
                 {
@@ -221,9 +233,13 @@ namespace Multichat_client
 
                 do
                 {
-                    int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
-                    message = Encoding.ASCII.GetString(buffer, 0, readBytes);
-                    completeMessage.Append(message);
+                    do
+                    {
+                        int readBytes = await networkStream.ReadAsync(buffer, 0, bufferSize);
+                        message = Encoding.ASCII.GetString(buffer, 0, readBytes);
+                        completeMessage.Append(message);
+                    }
+                    while (completeMessage.ToString().IndexOf("@") < 0);                    
                 }
                 while (networkStream.DataAvailable);
 
@@ -243,7 +259,8 @@ namespace Multichat_client
                     break;
                 }
 
-                if (decodedType == "MESSAGE") {
+                if (decodedType == "MESSAGE")
+                {
                     AddMessage($"{decodedUsername}: {decodedMessage}");
                 }
             }

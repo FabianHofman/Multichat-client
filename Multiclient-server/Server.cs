@@ -27,6 +27,7 @@ namespace Mutliclient_server
         public Server()
         {
             InitializeComponent();
+            btnStopServer.Enabled = false;
         }
 
         // Everything related to user interface
@@ -133,17 +134,15 @@ namespace Mutliclient_server
             AddMessage($"[Server] Server started! Accepting users on port {portNumber}");
 
             btnStartServer.Enabled = false;
+            btnStopServer.Enabled = true;
 
             do
             {
-                if (tcpListener.Pending())
-                {
-                    TcpClient client = await tcpListener.AcceptTcpClientAsync();
+                TcpClient client = await tcpListener.AcceptTcpClientAsync();
 
-                    listConnectedClients.Add(client);
-                    UpdateClientList();
-                    await Task.Run(() => ReceiveData(client, bufferSize));
-                }
+                listConnectedClients.Add(client);
+                UpdateClientList();
+                await Task.Run(() => ReceiveData(client, bufferSize));
             }
             while (started);
 
@@ -164,6 +163,14 @@ namespace Mutliclient_server
             }
 
             started = false;
+
+            TcpClient tcpClient = new TcpClient();
+            tcpClient.Connect("127.0.0.1", StringToInt(txtPort.Text));
+            await SendDisconnectMessageAsync(tcpClient.GetStream(), "INFO", username, "DISCONNECTING");
+            tcpClient.Close();
+
+            btnStopServer.Enabled = false;
+            btnStartServer.Enabled = true;
         }
 
         // Everything related to recieving data.
@@ -172,7 +179,7 @@ namespace Mutliclient_server
             byte[] buffer = new byte[bufferSize];
 
             NetworkStream stream = client.GetStream();
-            AddMessage($"[Server] A client has connected!"); //TODO: Change client for username (verzin eigen protocol)
+            AddMessage($"[Server] A client has connected!");
 
             while (stream.CanRead)
             {
@@ -182,9 +189,13 @@ namespace Mutliclient_server
                 {
                     try
                     {
-                        int readBytes = await stream.ReadAsync(buffer, 0, bufferSize);
-                        string message = Encoding.ASCII.GetString(buffer, 0, readBytes);
-                        completeMessage.Append(message);
+                        do
+                        {
+                            int readBytes = await stream.ReadAsync(buffer, 0, bufferSize);
+                            string message = Encoding.ASCII.GetString(buffer, 0, readBytes);
+                            completeMessage.Append(message);
+                        }
+                        while (completeMessage.ToString().IndexOf("@") < 0);
                     }
                     catch (IOException ex)
                     {
@@ -211,8 +222,11 @@ namespace Mutliclient_server
                     break;
                 }
 
-                await BroadcastMessage(client, decodedType, decodedUsername, decodedMessage);
-                AddMessage($"{decodedUsername}: {decodedMessage}");
+                if (decodedType == "MESSAGE")
+                {
+                    await BroadcastMessage(client, decodedType, decodedUsername, decodedMessage);
+                    AddMessage($"{decodedUsername}: {decodedMessage}");
+                }
             }
 
             stream.Close();
