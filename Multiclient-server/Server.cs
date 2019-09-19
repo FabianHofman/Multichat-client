@@ -63,7 +63,7 @@ namespace Mutliclient_server
         private void UpdateMessageList(string message)
         {
             listMessages.Items.Add(message);
-            //listMessages.SelectedIndex = listMessages.Items.Count - 1;
+            listMessages.SelectedIndex = listMessages.Items.Count - 1;
         }
 
         private void UpdateClientList()
@@ -166,6 +166,8 @@ namespace Mutliclient_server
 
             tcpListener.Stop();
 
+            listConnectedClients = new List<TcpClient>();
+
             btnStartServer.Enabled = true;
             btnStopServer.Enabled = false;
 
@@ -180,7 +182,7 @@ namespace Mutliclient_server
             AddMessage("[Server] Closing...");
             string completeMessage = EncodeMessage(type, username, message);
 
-            foreach (TcpClient user in listConnectedClients)
+            foreach (TcpClient user in listConnectedClients.ToList())
             {
                 await SendMessageOnNetworkAsync(user.GetStream(), completeMessage);
             }
