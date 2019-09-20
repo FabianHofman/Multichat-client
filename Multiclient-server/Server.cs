@@ -17,7 +17,7 @@ namespace Mutliclient_server
 {
     public partial class Server : Form
     {
-
+        // De delegates die nodig zijn als een update ui request wordt gedaan van een non-ui thread.
         protected delegate void UpdateMessageListDelegate(string message);
         protected delegate void UpdateClientListDelegate();
 
@@ -30,7 +30,6 @@ namespace Mutliclient_server
             btnStopServer.Enabled = false;
         }
 
-        // Everything related to user interface
         private async void BtnStartServer_Click(object sender, EventArgs e)
         {
             try
@@ -49,7 +48,7 @@ namespace Mutliclient_server
         }
 
         /// <summary>
-        /// Checkt of de lijst met clients een invoke nodig heeft of niet en stuurt die vervolgens door.
+        /// Checkt of de lijst met berichten een invoke nodig heeft of niet en stuurt die vervolgens door.
         /// </summary>
         /// <param name="message">Het bericht wat toegevoegd moet worden</param>
         private void AddMessage(string message)
@@ -133,12 +132,11 @@ namespace Mutliclient_server
         private async Task SendDisconnectMessageAsync(NetworkStream stream, string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
-
             await SendMessageOnNetworkAsync(stream, completeMessage);
         }
 
         /// <summary>
-        /// Verstuurd een bericht op de NetworkStream met de ingestelde buffersize
+        /// Verstuurd een bericht een bericht in stukken op het netwerk (afhankelijk van de gekozen buffer size)
         /// </summary>
         /// <param name="stream">De NetworkStream van iedere gebruiker</param>
         /// <param name="message">Het hele bericht dat gestuurd moet worden op de NetworkStream</param>
