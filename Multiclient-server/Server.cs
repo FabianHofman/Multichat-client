@@ -166,7 +166,7 @@ namespace Mutliclient_server
 
             tcpListener.Stop();
 
-            listConnectedClients = new List<TcpClient>();
+            AddMessage("[Server] Listener stopped!");
 
             btnStartServer.Enabled = true;
             btnStopServer.Enabled = false;
@@ -190,11 +190,9 @@ namespace Mutliclient_server
             started = false;
 
             TcpClient tcpClient = new TcpClient();
-            await tcpClient.ConnectAsync("127.0.0.1", StringToInt(txtPort.Text));
+            await tcpClient.ConnectAsync(txtServerIP.Text, StringToInt(txtPort.Text));
             await SendDisconnectMessageAsync(tcpClient.GetStream(), "INFO", username, "DISCONNECT");
             tcpClient.Close();
-
-            AddMessage("[Server] Closed!");
 
             btnStopServer.Enabled = false;
             btnStartServer.Enabled = true;
