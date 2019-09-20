@@ -20,6 +20,7 @@ namespace Multichat_client
         TcpClient tcpClient;
         NetworkStream networkStream;
 
+        // De delegate die nodig is als een update ui request wordt gedaan van een non-ui thread.
         protected delegate void UpdateDisplayDelegate(string message);
 
         public Client()
@@ -30,7 +31,6 @@ namespace Multichat_client
             txtMessageToBeSend.Enabled = false;
         }
 
-        // Everything related to user interface
         private async void BtnDisconnectFromServer_Click(object sender, EventArgs e)
         {
             try
@@ -54,18 +54,15 @@ namespace Multichat_client
                 AddMessage("Disconnected!");
                 MessageBox.Show(ex.Message, "No connection", MessageBoxButtons.OK, MessageBoxIcon.Error);
 
-                // disable or enable buttons
+                // disable or enable buttons and text fields
                 btnConnectWithServer.Enabled = true;
                 btnSendMessage.Enabled = false;
                 btnDisconnectFromServer.Enabled = false;
-
-                //disable or enable text fields
                 txtUsername.Enabled = true;
                 txtChatServerIP.Enabled = true;
                 txtChatServerPort.Enabled = true;
                 txtMessageToBeSend.Enabled = false;
                 txtBufferSize.Enabled = true;
-
             }
             catch
             {
@@ -108,30 +105,44 @@ namespace Multichat_client
 
         }
 
+        /// <summary>
+        /// Checkt of de lijst met berichten een invoke nodig heeft of niet en stuurt die vervolgens door.
+        /// </summary>
+        /// <param name="message">Het bericht wat toegevoegd moet worden</param>
         private void AddMessage(string message)
         {
             if (listChats.InvokeRequired)
             {
-                listChats.Invoke(new UpdateDisplayDelegate(UpdateDisplay), new object[] { message });
+                listChats.Invoke(new UpdateDisplayDelegate(UpdateListChats), new object[] { message });
             }
             else
             {
-                UpdateDisplay(message);
+                UpdateListChats(message);
             }
         }
 
-        private void UpdateDisplay(string message)
+        /// <summary>
+        /// Voegt een bericht toe aan de lijst met berichten
+        /// </summary>
+        /// <param name="message">Het bericht dat toegevoegd moet worden</param>
+        private void UpdateListChats(string message)
         {
             listChats.Items.Add(message);
             listChats.SelectedIndex = listChats.Items.Count - 1;
         }
 
-        // Everything related to messages
+        /// <summary>
+        /// Stuurt een bericht op het netwerk en voegt dit toe aan de lijst met berichten
+        /// </summary>
+        /// <param name="type">Het type bericht dat verstuurd moet worden</param>
+        /// <param name="username">De gebruikersnaam waarvan het gestuurd is</param>
+        /// <param name="message">Het bericht dat verstuurd moet worden</param>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
         private async Task SendMessageAsync(string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
 
-            await SendMessageOnNetwork(completeMessage);
+            await SendMessageOnNetworkAsync(completeMessage);
 
             message = DecodeMessage(message);
 
@@ -140,13 +151,25 @@ namespace Multichat_client
             txtMessageToBeSend.Focus();
         }
 
+        /// <summary>
+        /// Stuurt een disconnect bericht naar de server
+        /// </summary>
+        /// <param name="type">Het type bericht dat verstuurd moet worden</param>
+        /// <param name="username">De gebruikersnaam waarvan het gestuurd is</param>
+        /// <param name="message">Het bericht dat verstuurd moet worden</param>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
         private async Task SendDisconnectMessageAsync(string type, string username, string message)
         {
             string completeMessage = EncodeMessage(type, username, message);
-            await SendMessageOnNetwork(completeMessage);
+            await SendMessageOnNetworkAsync(completeMessage);
         }
 
-        private async Task SendMessageOnNetwork(string message)
+        /// <summary>
+        /// Verstuurd een bericht een bericht in stukken op het netwerk (afhankelijk van de gekozen buffer size)
+        /// </summary>
+        /// <param name="message">Het hele bericht dat gestuurd moet worden op de NetworkStream</param>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
+        private async Task SendMessageOnNetworkAsync(string message)
         {
             int bufferSize = StringToInt(txtBufferSize.Text);
             do
@@ -164,16 +187,18 @@ namespace Multichat_client
             while (message.Length > 0);
         }
 
-        // Everything related to buttons
+        /// <summary>
+        /// De verbinding verbreken met de server waarmee je verbonden bent
+        /// </summary>
+        /// <param name="username">De gebruikersnaam die de gebruiker in gebruik heeft</param>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
         private async Task DisconnectFromServerAsync(string username)
         {
             await SendDisconnectMessageAsync("INFO", username, "DISCONNECTING");
-            // disable or enable buttons
+            // disable or enable buttons and text fields
             btnConnectWithServer.Enabled = true;
             btnSendMessage.Enabled = false;
             btnDisconnectFromServer.Enabled = false;
-
-            //disable or enable text fields
             txtUsername.Enabled = true;
             txtChatServerIP.Enabled = true;
             txtChatServerPort.Enabled = true;
@@ -181,6 +206,10 @@ namespace Multichat_client
             txtBufferSize.Enabled = true;
         }
 
+        /// <summary>
+        /// Hierin wordt een verbinding gemaakt met de server nadat alle checks gedaan zijn.
+        /// </summary>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
         private async Task CreateConnectionAsync()
         {
             int portNumber = StringToInt(txtChatServerPort.Text);
@@ -198,12 +227,10 @@ namespace Multichat_client
                 try
                 {
                     await tcpClient.ConnectAsync(IPaddress, portNumber);
-                    // disable or enable buttons
+                    // disable or enable buttons and text fields
                     btnConnectWithServer.Enabled = false;
                     btnSendMessage.Enabled = true;
                     btnDisconnectFromServer.Enabled = true;
-
-                    //disable or enable text fields
                     txtUsername.Enabled = false;
                     txtChatServerIP.Enabled = false;
                     txtChatServerPort.Enabled = false;
@@ -211,12 +238,10 @@ namespace Multichat_client
                     txtBufferSize.Enabled = false;
 
                     await Task.Run(() => ReceiveData(bufferSize));
-                    // disable or enable buttons
+                    // disable or enable buttons and text fields
                     btnConnectWithServer.Enabled = true;
                     btnSendMessage.Enabled = false;
                     btnDisconnectFromServer.Enabled = false;
-
-                    //disable or enable text fields
                     txtUsername.Enabled = true;
                     txtChatServerIP.Enabled = true;
                     txtChatServerPort.Enabled = true;
@@ -231,7 +256,11 @@ namespace Multichat_client
 
         }
 
-        // Everything related to receiving data.
+        /// <summary>
+        /// In deze functie wordt de data opgehaald die een verbonden server stuurt
+        /// </summary>
+        /// <param name="bufferSize">De buffersize die de functie moet gebruiken</param>
+        /// <returns>Task die op een aparte thread gerunt wordt</returns>
         private async Task ReceiveData(int bufferSize)
         {
             string message = "";
@@ -284,8 +313,13 @@ namespace Multichat_client
             AddMessage("Connection closed");
         }
 
-
-        // Everything related to encoding/decoding and the protocol
+        /// <summary>
+        /// Hierin wordt het te versturen "bericht" encode en wordt message markers toegevoegd.
+        /// </summary>
+        /// <param name="type">Het type bericht dat verstuurd moet worden</param>
+        /// <param name="username">De gebruikersnaam waarvan het gestuurd is</param>
+        /// <param name="message">Het bericht dat verstuurd moet worden</param>
+        /// <returns>Een string met message markers</returns>
         private string EncodeMessage(string type, string username, string message)
         {
             type = Regex.Replace(type, "[|]", "&#124");
@@ -300,11 +334,22 @@ namespace Multichat_client
             return $"@{type}||{username}||{message}@";
         }
 
+        /// <summary>
+        /// Hierin wordt de juiste stukken gepakt die nodig zijn om het bericht goed te zetten
+        /// </summary>
+        /// <param name="message">Het bericht dat binnen komt op de NetworkStream</param>
+        /// <param name="regex">De regex die uitgevoerd moet worden om alle benodigde informatie te krijgen</param>
+        /// <returns>Een deel van de message die nodig is</returns>
         private string FilterProtocol(string message, Regex regex)
         {
             return regex.Match(message).ToString();
         }
 
+        /// <summary>
+        /// In de encode message worden teken die verward kunnen worden met de message markers omgezet, dit zal weer terug gezet moeten worden.
+        /// </summary>
+        /// <param name="str">De string dat gedecode moet worden</param>
+        /// <returns>String met daarin de juiste tekens</returns>
         private string DecodeMessage(string str)
         {
             str = Regex.Replace(str, "&#124", "|");
@@ -313,7 +358,11 @@ namespace Multichat_client
             return str;
         }
 
-        // Everything related to validation of input
+        /// <summary>
+        /// Deze functie valideert of het ingegeven IP adres wel goed is. 
+        /// </summary>
+        /// <param name="ipString">Het IP adres dat gevalideerd moet worden</param>
+        /// <returns>Boolean die aan geeft of het IP adres goed is.</returns>
         private bool ValidateIPv4(string ipString)
         {
             if (String.IsNullOrWhiteSpace(ipString))
@@ -332,6 +381,14 @@ namespace Multichat_client
             return splitValues.All(r => byte.TryParse(r, out tempForParsing));
         }
 
+        /// <summary>
+        /// Valideert de ingevulde gegevens voor het starten van een client
+        /// </summary>
+        /// <param name="username">De gebruikersnaam die de gebruiker wil gebruiken</param>
+        /// <param name="IPaddress">IP adres waarop de server runt</param>
+        /// <param name="portNumber">Poort waarop de server runt</param>
+        /// <param name="bufferSize">Buffer size die de server gaat gebruiken</param>
+        /// <returns>Boolean die aan geeft of de ingevulde gegevens goed zijn</returns>
         private bool ValidateClientPreferences(string username, string IPaddress, int portNumber, int bufferSize)
         {
 
@@ -361,7 +418,11 @@ namespace Multichat_client
             return true;
         }
 
-        // Everything needed to make other things work
+        /// <summary>
+        /// Haalt de int waarde uit een string
+        /// </summary>
+        /// <param name="text">String waaruit de int gehaald moet worden</param>
+        /// <returns>Int uit de string</returns>
         private int StringToInt(string text)
         {
             int number;
