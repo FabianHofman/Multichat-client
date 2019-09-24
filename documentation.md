@@ -297,7 +297,7 @@ void DoWork(int k) { /* ... */ }
 Del d = obj.DoWork;
 ```
 
-Dit wordt genoemd met behulp van een benaamde methode. Delegates gebouwd met een benaamde methode kunnen een statische methode of een instantiemethode inkapselen. Benaamde methoden zijn de enige manier om een delegate in eerdere versies van C # te instantiëren. In een situatie waarin het creëren van een nieuwe methode ongewenste overhead is, kunt u met C # een delegate instantiëren en onmiddellijk een codeblok opgeven dat de delegate zal verwerken wanneer deze wordt aangeroepen. Het blok kan een lambda-expressie of een anonieme methode bevatten.
+Dit wordt genoemd met behulp van een benaamde methode. Delegates gebouwd met een benaamde methode kunnen een statische methode of een instantiemethode inkapselen. Benaamde methoden zijn de enige manier om een delegate in eerdere versies van C # te instantiëren. In een situatie waarin het creëren van een nieuwe methode ongewenste overhead is, kan je met C # een delegate instantiëren en onmiddellijk een codeblok opgeven dat de delegate zal verwerken wanneer deze wordt aangeroepen. Het blok kan een lambda-expressie of een anonieme methode bevatten.
 
 Invoke is een methode binnen windows forms om een delegate uit te voeren op de thread die de onderliggende window control handle heeft. Deze method zit in de namespace `System.Windows.Forms`. Deze methode heeft 2 overloads namelijk de `Invoke(Delegate)` die een speciefoeke delegate runt en de `Invoke(Delegate, Object[])` die een delegate uitvoert d.m.v. een lijst met argumenten. 
 
@@ -308,8 +308,47 @@ Invoke is een methode binnen windows forms om een delegate uit te voeren op de t
 - https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.control.invoke?view=netframework-4.8
 
 ## Threading & async
-Of je nu ontwikkelt voor computers met één processor of meerdere, je wilt dat uw toepassing de meest responsieve interactie met de gebruiker biedt, zelfs als de toepassing momenteel ander werk doet. Het gebruik van meerdere uitvoeringsdraden is een van de krachtigste manieren om uw toepassing responsief te houden voor de gebruiker en tegelijkertijd gebruik te maken van de processor tussendoor of zelfs tijdens gebruikersevenementen. Hoewel dit gedeelte de basisconcepten van threading introduceert, richt het zich op managed threading-concepten en het gebruik van managed threading.
+Of je nu ontwikkelt voor computers met één processor of meerdere, je wilt dat uw toepassing de meest responsieve interactie met de gebruiker biedt, zelfs als de toepassing momenteel ander werk doet. Het gebruik van meerdere "threads of execution" is een van de krachtigste manieren om uw toepassing responsief te houden voor de gebruiker en tegelijkertijd gebruik te maken van de processor tussendoor of zelfs tijdens user events. Met multithreading kan je de responsiviteit van uw applicatie verhogen en, als uw applicatie op een multiprocessor of multi-core systeem draait, de doorvoer verhogen.
+
+Om dit concept beter te kunnen begrijpen gaan we eerst kijken naar het verschil tussen een proces en een thread. Een proces is een uitvoerend programma. Een besturingssysteem gebruikt processen om de applicaties die worden uitgevoerd te scheiden. Een thread is de basiseenheid waaraan een besturingssysteem processortijd toewijst. Elke thread heeft een planningsprioriteit en onderhoudt een set structuren die het systeem gebruikt om de threadcontext op te slaan wanneer de uitvoering van de thread wordt gepauzeerd. De threadcontext bevat alle informatie die de thread nodig heeft om de uitvoering te hervatten, inclusief de set CPU-registers en de stack van de thread. Meerdere threads kunnen worden uitgevoerd in de context van een proces. Alle threads van een proces delen zijn virtuele adresruimte. Een thread kan elk deel van de programmacode uitvoeren, inclusief delen die momenteel door een andere thread worden uitgevoerd. Standaard wordt een .NET-programma gestart met een enkele thread, vaak de primaire thread genoemd. Het kan echter extra threads maken om code parallel of gelijktijdig met de primaire thread uit te voeren. Deze threads worden vaak "worker threads" genoemd.
+
+Je gebruikt meerdere threads om de responsiviteit van uw applicatie te vergroten en om te profiteren van een multiprocessor of multi-core systeem om de doorvoer van de applicatie te verhogen. Overweeg een desktoptoepassing, waarbij de primaire thread verantwoordelijk is voor gebruikersinterface-elementen en reageert op gebruikersacties. Gebruik werkthreads om tijdrovende bewerkingen uit te voeren die anders de primaire thread bezetten en de gebruikersinterface niet reageren. Je kan ook een speciale thread gebruiken voor netwerk- of apparaatcommunicatie om sneller te reageren op inkomende berichten of gebeurtenissen.
+
+Vanaf .NET Framework versie 2.0, laat de common language runtime de meeste unhandled exceptions in threads op natuurlijke wijze verlopen. In de meeste gevallen betekent dit dat de unhandled exception ertoe leidt dat de toepassing wordt beëindigd.
+
+De common language runtime biedt een backstop voor bepaalde unhandled exceptions die worden gebruikt voor het regelen van de program flow:
+- Een ThreadAbortException wordt in een thread gegooid omdat Abort werd aangeroepen.
+- Een AppDomainUnloadedException wordt in een thread gegooid omdat het toepassingsdomein waarin de thread wordt uitgevoerd, wordt verwijderd.
+- De algemene runtime of een hostproces beëindigt de thread door een interne exception te genereren.
+Als een van deze exceptions niet wordt verwerkt in threads die zijn gemaakt door de common language runtime, wordt de thread beëindigd door de uitzondering, maar de common language runtime staat niet toe dat de uitzondering verder gaat.
+Als deze exceptuions niet worden verwerkt in de hoofdthread of in threads die de runtime zijn ingevoerd vanuit een onbeheerde code, verlopen ze normaal en wordt de toepassing beëindigd.
+
+Wanneer threads stil kunnen mislukken, zonder de toepassing te beëindigen, kunnen ernstige programmeerproblemen onopgemerkt blijven. Dit is met name een probleem voor services en andere applicaties die langere tijd worden gebruikt. Als threads mislukken, wordt de programmastatus geleidelijk beschadigd. De prestaties van de toepassing kunnen verslechteren of de toepassing reageert mogelijk niet meer.
+
+Wanneer meerdere threads de eigenschappen en methoden van een enkel object kunnen aanroepen, is het van cruciaal belang dat deze calls worden gesynchroniseerd. Anders kan een thread onderbreken wat een andere thread doet en kan het object in een ongeldige status blijven. Een klasse waarvan de leden tegen dergelijke onderbrekingen worden beschermd, wordt thread-safe genoemd.
+
+NET biedt verschillende strategieën om de toegang tot subsystemen en statische leden te synchroniseren:
+- Gesynchroniseerde codegebieden. Je kan de Monitor-klasse of compilerondersteuning voor deze klasse gebruiken om alleen het codeblok te synchroniseren dat dit nodig heeft, waardoor de prestaties worden verbeterd.
+- Handmatige synchronisatie. Je kan de synchronisatieobjecten gebruiken die worden aangeboden door de .NET-klassenbibliotheek.
+- Gesynchroniseerde contexten. Voor .NET Framework- en Xamarin-toepassingen kan je het SynchronizationAttribute gebruiken om eenvoudige, automatische synchronisatie voor ContextBoundObject-objecten in te schakelen.
+- Collectieklassen in de namespace System.Collections.Concurrent. Deze klassen bieden ingebouwde gesynchroniseerde toevoeg- en verwijderbewerkingen.
+
+Een beheerde thread is een achtergrondthread of een voorgrondthread. Achtergrondthreads zijn identiek aan voorgrondthreads met één uitzondering: een achtergrondthread houdt de beheerde uitvoeringsomgeving niet actief. Nadat alle voorgrondthreads in een beheerd proces zijn gestopt, stopt het systeem alle achtergrondthreads en wordt het afgesloten.
+
+Als alternatief op threads is er ook async programming. Hiermee kan je hetzelfde resultaat bereiken en behoud je de responsiveness van de applicatie. Traditionele technieken voor het schrijven van asynchrone toepassingen kunnen echter ingewikkeld zijn, waardoor ze moeilijk te schrijven, te debuggen en te onderhouden zijn.
+
+C# 5 introduceerde een vereenvoudigde aanpak, async programmeren, die gebruik maakt van asynchrone ondersteuning in .NET Framework 4.5 (en hoger), .NET Core en Windows Runtime. De compiler doet het moeilijke werk dat de ontwikkelaar deed en uw toepassing heeft een logische structuur die lijkt op synchrone code. Als resultaat krijg je alle voordelen van asynchroon programmeren met een fractie van de inspanning.
+
+Async-methoden zijn bedoeld als niet-blokkerende bewerkingen. Een wachtende uitdrukking in een asynchrone methode blokkeert de huidige thread niet terwijl de verwachte taak wordt uitgevoerd. In plaats daarvan meldt de expressie de rest van de methode als een voortzetting en retourneert de besturing aan de beller van de async-methode.
+
+De asynchrone en wachtende zoekwoorden veroorzaken geen extra threads. Async-methoden vereisen geen multithreading omdat een async-methode niet op zijn eigen thread draait. De methode wordt uitgevoerd in de huidige synchronisatiecontext en gebruikt alleen tijd op de thread wanneer de methode actief is. Je kan Task.Run gebruiken om CPU-gebonden werk naar een achtergrondthread te verplaatsen, maar een achtergrondthread helpt niet bij een proces dat wacht op het beschikbaar komen van resultaten.
+
+De asynchrone benadering van asynchrone programmering verdient in bijna alle gevallen de voorkeur boven bestaande benaderingen. In het bijzonder is deze aanpak beter dan de BackgroundWorker-klasse voor I/O-gebonden operaties omdat de code eenvoudiger is en je niet hoeft te waken tegen raceomstandigheden. In combinatie met de Task.Run-methode is async-programmering beter dan BackgroundWorker voor CPU-gebonden bewerkingen omdat async-programmering de coördinatiegegevens van het uitvoeren van uw code scheidt van het werk dat Task.Run overbrengt naar de threadpool.
 
 ### Bronnen
 - https://docs.microsoft.com/en-us/dotnet/standard/threading/
-- https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/
+- https://docs.microsoft.com/en-us/dotnet/standard/threading/threads-and-threading
+- https://docs.microsoft.com/en-us/dotnet/standard/threading/exceptions-in-managed-threads
+- https://docs.microsoft.com/en-us/dotnet/standard/threading/synchronizing-data-for-multithreading
+- https://docs.microsoft.com/en-us/dotnet/standard/threading/foreground-and-background-threads
+- https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/concepts/async/task-asynchronous-programming-model
